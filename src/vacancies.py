@@ -4,20 +4,16 @@ import requests
 
 
 class VacancyAPI(ABC):
-    base_url: str
-    def __init__(self, base_url):
-        self.base_url = base_url
-
-
     @abstractmethod
     def get_vacancies(self):
         pass
 
 class HeadHunterAPI(VacancyAPI):
     def __init__(self):
-        super().__init__("https://api.hh.ru/vacancies")
+        self.base_url: str = "https://api.hh.ru/vacancies"
 
     def get_vacancies(self, params=None):
+        """Подключаеся к api и возвращает вакансии"""
         try:
             req = requests.get(self.base_url, params=params)
             if req.status_code == 200:
@@ -38,51 +34,80 @@ class HeadHunterAPI(VacancyAPI):
 
 class Vacancy:
 
-    def __init__(self, name, url, salary, description):
-        self.name: str = name
-        self.url: str = url
-        self.salary: int = self._validation_salary(salary)
-        self.description: str = description
+    def __init__(self, vac):
+        self.name: str = vac.get("url", "Ссылка отсутствует")
+        self.url: str = vac.get("alternate_url")
+        self.salary: str = self._validation_salary(vac.get("salary"))
+        self.description: str = self._get_description(vac.get("snippet"))
+
+
+    def to_dict(self):
+        """Преобразование объекта вакансии в словарь для сохранения."""
+        return {
+            "name": self.name,
+            "url": self.url,
+            "salary": self.salary,
+            "description": self.description
+        }
+
+
+
+    def _get_description(self, description):
+        """Получение описания из snippet и возвращает requirement и responsibility
+        """
+        requirement = description.get("requirement", "")
+        responsibility = description.get("responsibility", "")
+        desc = requirement
+        if responsibility:
+            desc += " " + responsibility
+        return desc.strip() if desc else "Описание отсутствует"
+
 
     def _validation_salary(self, salary):
-        if  salary is None or isinstance(salary, int) and salary <= 0:
-            return 0
-        return salary
+        """Валидация salary"""
+        if salary is None:
+            self.salary_from = 0
+            self.salary_to = 0
+            return f"{self.salary_from} - {self.salary_to} руб."
+        else:
+            self.salary_from = salary["from"] if salary["from"] else 0
+            self.salary_to = salary["to"] if salary["to"] else 0
+            return f"{self.salary_from} - {self.salary_to} руб."
 
     def __eq__(self, other):
-        if not isinstance(other, (Vacancy, int)):
-            raise TypeError("")
-
-        ob = other if isinstance(other, int) else other.salary
-        return self.salary == ob
+        if isinstance(other, Vacancy):
+            return self.salary_from == other.salary_from
+        elif isinstance(other, int):
+            return self.salary_from == other
+        raise TypeError("Сравнение возможно только с Vacancy или int")
 
     def __lt__(self, other):
-        if not isinstance(other, (Vacancy, int)):
-            raise TypeError("\033[31mМожно сравнивать только с объектами Vacancy или числами\033[0m")
-
-        ob = other if isinstance(other, int) else other.salary
-        return self.salary < ob
+        if isinstance(other, Vacancy):
+            return self.salary_from < other.salary_from
+        elif isinstance(other, int):
+            return self.salary_from < other
+        raise TypeError("Сравнение возможно только с Vacancy или int")
 
     def __gt__(self, other):
-        if not isinstance(other, (Vacancy, int)):
-            raise TypeError("\033[31mМожно сравнивать только с объектами Vacancy или числами\033[0m")
-
-        ob = other if isinstance(other, int) else other.salary
-        return self.salary > ob
+        if isinstance(other, Vacancy):
+            return self.salary_from > other.salary_from
+        elif isinstance(other, int):
+            return self.salary_from > other
+        raise TypeError("Сравнение возможно только с Vacancy или int")
 
     def __le__(self, other):
-        if not isinstance(other, (Vacancy, int)):
-            raise TypeError("\033[31mМожно сравнивать только с объектами Vacancy или числами\033[0m")
-
-        ob = other if isinstance(other, int) else other.salary
-        return self.salary <= ob
+        if isinstance(other, Vacancy):
+            return self.salary_from <= other.salary_from
+        elif isinstance(other, int):
+            return self.salary_from <= other
+        raise TypeError("Сравнение возможно только с Vacancy или int")
 
     def __ge__(self, other):
-        if not isinstance(other, (Vacancy, int)):
-            raise TypeError("\033[31mМожно сравнивать только с объектами Vacancy или числами\033[0m")
-
-        ob = other if isinstance(other, int) else other.salary
-        return self.salary >= ob
+        if isinstance(other, Vacancy):
+            return self.salary_from >= other.salary_from
+        elif isinstance(other, int):
+            return self.salary_from >= other
+        raise TypeError("Сравнение возможно только с Vacancy или int")
 
     def __str__(self):
         return f"{self.name}, {self.url}, {self.salary}, {self.description}"
@@ -90,5 +115,3 @@ class Vacancy:
 if __name__ == "__main__":
     hh = HeadHunterAPI()
     vacancies = hh.get_vacancies(params={"text": "python"})
-    for i in vacancies:
-         print(i)

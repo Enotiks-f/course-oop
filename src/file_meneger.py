@@ -22,8 +22,7 @@ class FileManeger(BaseFileManger):
 
 
     def add_file(self, data):
-
-
+        """Добавляет ваканскии в json file"""
         try:
             with open(self.file_pach, "r", encoding="utf-8") as f:
                 old_data = json.load(f)
@@ -39,10 +38,12 @@ class FileManeger(BaseFileManger):
 
 
     def get_data_file(self):
+        """Получает вакансии из json"""
         with open(self.file_pach, "r",  encoding="utf-8") as f:
             json.load(f)
 
     def del_vacancy_id(self, vacancy):
+        """Удаляет вакансии по id"""
         try:
             with open(self.file_pach, "r", encoding="utf-8") as f:
                 data = json.load(f)

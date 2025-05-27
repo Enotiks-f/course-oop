@@ -1,17 +1,55 @@
-def main():
-    name_vacancies = input(
-        "Привет, введите название вакансий (Если не нужна конкретная вакансия — введите \033[33mN\033[0m)\nВвод: ")
-    while True:
-        try:
-            w2 = int(input("Теперь, укажи кол-во вакансий\nВвод: "))
-            if w2 <= 0:
-                print("\033[31mУказанное кол-во вакансий должно быть больше чем 0\033[0m")
-            else:
-                break
-        except ValueError:
-            print("\033[31mВведенный параметр не является числом. Повторите попытку\033[0m")
+from src.vacancies import Vacancy, HeadHunterAPI
+from src.user_func import filter_vacancies_by_description, get_top_n_vacancies
 
-    description_vacancy = input("Напиши ключевые слова для описания (если не нужно — введи \033[33mN\033[0m)\nВвод: ")
+def main():
+    hh = HeadHunterAPI()
+
+    print("=== Поиск вакансий на hh.ru ===")
+
+    query = input("Введите поисковый запрос (например, 'python'): ").strip()
+    raw_vacancies = hh.get_vacancies(params={"text": query})
+
+    vacancies = []
+    for item in raw_vacancies:
+        vacancy = Vacancy(item)
+        vacancies.append(vacancy)
+
+    print(f"Найдено {len(vacancies)} вакансий.")
+
+    while True:
+        print("\nВыберите действие:")
+        print("1. Показать топ N вакансий по зарплате")
+        print("2. Найти вакансии по ключевому слову в описании")
+        print("3. Показать все вакансии")
+        print("0. Выход")
+
+        choice = input("Ваш выбор: ").strip()
+
+        if choice == "1":
+            try:
+                n = int(input("Введите количество вакансий: "))
+                top_vacancies = get_top_n_vacancies(vacancies, n)
+                for v in top_vacancies:
+                    print(v)
+            except ValueError:
+                print("Ошибка: введите целое число.")
+
+        elif choice == "2":
+            keyword = input("Введите ключевое слово для поиска в описании: ").strip()
+            filtered = filter_vacancies_by_description(vacancies, keyword)
+            for v in filtered:
+                print(v)
+
+        elif choice == "3":
+            for v in vacancies:
+                print(v)
+
+        elif choice == "0":
+            print("Выход.")
+            break
+
+        else:
+            print("Неверный ввод. Попробуйте снова.")
 
 
 main()
