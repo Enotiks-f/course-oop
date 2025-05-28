@@ -1,8 +1,12 @@
-from src.vacancies import Vacancy, HeadHunterAPI
+from src.vacancies import Vacancy
+from src.hh_api import HeadHunterAPI
 from src.user_func import filter_vacancies_by_description, get_top_n_vacancies
+from src.file_manager import FileManeger  # <-- подключение
+import os
 
 def main():
     hh = HeadHunterAPI()
+    fm = FileManeger()
 
     print("=== Поиск вакансий на hh.ru ===")
 
@@ -21,6 +25,9 @@ def main():
         print("1. Показать топ N вакансий по зарплате")
         print("2. Найти вакансии по ключевому слову в описании")
         print("3. Показать все вакансии")
+        print("4. Сохранить вакансии в файл")
+        print("5. Удалить вакансию по ID")
+        print("6. Показать вакансии из файла")
         print("0. Выход")
 
         choice = input("Ваш выбор: ").strip()
@@ -44,6 +51,24 @@ def main():
             for v in vacancies:
                 print(v)
 
+        elif choice == "4":
+            to_save = [v.to_dict() for v in vacancies]
+            fm.add_file(to_save)
+            print("Вакансии сохранены в файл.")
+
+        elif choice == "5":
+            vac_id = input("Введите ID вакансии для удаления: ").strip()
+            fm.del_vacancy_id(vac_id)
+            print(f"Вакансия с ID {vac_id} удалена (если существовала).")
+
+        elif choice == "6":
+            try:
+                with open(fm.file_pach, encoding="utf-8") as f:
+                    data = f.read()
+                    print(data)
+            except FileNotFoundError:
+                print("Файл не найден.")
+
         elif choice == "0":
             print("Выход.")
             break
@@ -52,5 +77,5 @@ def main():
             print("Неверный ввод. Попробуйте снова.")
 
 
-main()
-
+if __name__ == "__main__":
+    main()
