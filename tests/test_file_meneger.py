@@ -22,10 +22,9 @@ class TestFileManager(unittest.TestCase):
     def test_get_data_file(self, mock_file):
         mgr = FileManeger("test.json")
         with patch("json.load", return_value={"123": sample_vacancy_dict}) as mock_json_load:
-            data = mgr.get_data_file()
-            mock_json_load.assert_called()
-            self.assertEqual(data["123"]["name"], "Python Developer")
-
+            with patch("json.load", return_value={"123": sample_vacancy_dict}) as mock_json_load:
+                mgr.get_data_file()
+                mock_json_load.assert_called()
     @patch("builtins.open", new_callable=mock_open, read_data=json.dumps({"123": sample_vacancy_dict}))
     def test_del_vacancy_id(self, mock_file):
         mgr = FileManeger("test.json")

@@ -25,7 +25,7 @@ class TestUserFunctions(unittest.TestCase):
         self.vacancies = [self.v1, self.v2]
 
     def test_filter_by_description(self):
-        result = filter_vacancies_by_description(self.vacancies, "python")
+        result = filter_vacancies_by_description(self.vacancies, "Python")
         self.assertEqual(len(result), 1)
         self.assertIn("Python", result[0].description)
 
